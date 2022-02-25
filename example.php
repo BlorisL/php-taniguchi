@@ -7,11 +7,9 @@ $password = "{$argv[2]}";
 $url = "{$argv[3]}";
 $port = (isset($argv[4]) && !empty("{$argv[4]}")) ? "{$argv[4]}" : 993;
 // Two way to call the class
-/*
 $url = "{{$url}:{$port}/service=imap/ssl/novalidate-cert}";
 $tmp = new \Taniguchi\Imap($account, $password, $url);
-*/
-$tmp = new \Taniguchi\Imap($account, $password, $url, $port);
-$tmp->setSsl()->setValidate(false);
+/*$tmp = new \Taniguchi\Imap($account, $password, $url, $port);
+$tmp->setSsl()->setValidate(false);*/
 var_dump($tmp->addRejects('daticert.xml','smime.p7s')->read(1, 2));
 ?>

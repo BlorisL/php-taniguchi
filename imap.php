@@ -315,24 +315,28 @@ class Imap {
     * Gets all the emails from Imap. It doesn't look from a specific folder, but among all existing emails.
     * It starts from the last email received to the first.
     *
-    * @param int        $from           Index of the email whence to start
-    * @param int        $to             Number of emails to get
+    * @param int        $from           Index of the email whence to start. If the value is negative or greater than total, it points to the first email received
+    * @param int        $number         Number of emails to get. If the value is negative or greater than total, it points to the last email received
     * @param bool       $details        (optional) If true it will get the text of the main message and all the .eml. Default value is 'false'
     * @param bool       $attachments    (optional) If true it will get all the attachments (.eml attachments too). Default value is 'false'
     *
     * @return array     Returns an array of \stdClass with all the informations about the emails
     */
-    public function read(int $from, int $to, bool $details = false, bool $attachments = false) {
+    public function read(int $from, int $number, bool $details = false, bool $attachments = false) {
         $emails = array();
         if($this->open(false)):
             $total = $this->getTotal(true);
             if(!empty($total)):
-                if($from < 0) $from = 0;
-                if($to < 1) $to = 1;
-                else if($to >= $total) $to = $total-1;
-                $to = $total - $to;
-                $from = $total - $from;
-                $rows = imap_fetch_overview($this->connection,"{$from}:{$to}",0);
+                if($from < 1 || $from > $total) $from = 1;
+                if($number < 1 || ($from + $number) > $total):
+                    $number = $total - $from + 1;
+                    if($number < 1 || ($from + $number) > $total) $number = $total; 
+                endif;
+                $x = $total - $from - $number + 2;
+                if($x < 1 || $x > $total) $x = 1;
+                $y = $total - $from - $number + 1 + $number;
+                if($y < 1 || $y > $total) $y = $total;
+                $rows = imap_fetch_overview($this->connection,"{$x}:{$y}",0);
                 foreach($rows as $row):
                     $messageNumber = $row->uid;
                     $structure = imap_fetchstructure($this->connection, $messageNumber, FT_UID);
