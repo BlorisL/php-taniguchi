@@ -24,6 +24,7 @@ To use this wrapper, just be sure to have [PHP Imap](https://www.php.net/manual/
 | Property | Description |
 | --- | --- |
 | **uid** | Imap UID of the mail (`FT_UID` activated) |
+| **seen** | Flag to check if this email is alreaby been opened |
 | **from** | Sender's email |
 | **subject** | Subject's email |
 | **date** | Date's email |

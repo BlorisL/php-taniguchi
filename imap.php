@@ -317,12 +317,13 @@ class Imap {
     *
     * @param int        $from           Index of the email whence to start. If the value is negative or greater than total, it points to the first email received
     * @param int        $number         Number of emails to get. If the value is negative or greater than total, it points to the last email received
+    * @param bool       $seen        (optional) If true it will set the flat "Seen" to true. Default value is 'false'
     * @param bool       $details        (optional) If true it will get the text of the main message and all the .eml. Default value is 'false'
     * @param bool       $attachments    (optional) If true it will get all the attachments (.eml attachments too). Default value is 'false'
     *
     * @return array     Returns an array of \stdClass with all the informations about the emails
     */
-    public function read(int $from, int $number, bool $details = false, bool $attachments = false) {
+    public function read(int $from, int $number, bool $details = false, bool $seen = false, bool $attachments = false) {
         $emails = array();
         if($this->open(false)):
             $total = $this->getTotal(true);
@@ -337,6 +338,9 @@ class Imap {
                 $y = $total - $from - $number + 1 + $number;
                 if($y < 1 || $y > $total) $y = $total;
                 $rows = imap_fetch_overview($this->connection,"{$x}:{$y}",0);
+                if($seen):
+                    imap_setflag_full($this->connection,"{$x}:{$y}", "\\Seen");
+                endif;
                 foreach($rows as $row):
                     $messageNumber = $row->uid;
                     $structure = imap_fetchstructure($this->connection, $messageNumber, FT_UID);
@@ -345,6 +349,7 @@ class Imap {
                     else:
                         $item = new \stdClass();
                     endif;
+                    $item->seen = $row->seen;
                     $item->uid = $messageNumber;
                     $item->from = explode(' ', str_replace(['"', 'Per conto di: '], '', $row->from))[0];
                     $item->subject = $row->subject;
@@ -361,7 +366,6 @@ class Imap {
         $email = new \stdClass();
         $email->messages = array();
         $email->attachments = array();
-        $toRejects = array('smime.p7s', 'daticert.xml');
         foreach($parts as $part):
             $filename = '';
             if($part->ifdparameters):
